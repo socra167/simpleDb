@@ -30,8 +30,8 @@ public class Sql {
     }
 
     /**
-     * SQL문에 포함된 '?'를 파라미터 값으로 대체
-     * @param statement PreparedStatement
+     * SQL문의 Statement, 인자값 추가
+     * @param statement SQL statement
      * @param objects values
      */
     public Sql append(final String statement, final Object ... objects) {
@@ -114,8 +114,8 @@ public class Sql {
     }
 
     /**
-     * SELECT문 실행
-     * @return Select 결과 Map
+     * 하나의 Row에 대한 SELECT문 실행
+     * @return SELECT 결과 Map
      */
     public Map<String, Object> selectRow() {
         Map<String, Object> resultMap = new HashMap<>();
@@ -144,26 +144,10 @@ public class Sql {
         return resultMap;
     }
 
-    public LocalDateTime selectDatetime() {
-        return LocalDateTime.now();
-    }
-
-    public Long selectLong() {
-        return 0L;
-    }
-
-    public String selectString() {
-        return "";
-    }
-
-    public Boolean selectBoolean() {
-        return false;
-    }
-
-    public List<Long> selectLongs() {
-        return new ArrayList<>();
-    }
-
+    /**
+     * 여러 Row에 대한 SELECT문 실행
+     * @return SELECT 결과 Map의 List
+     */
     public List<Map<String, Object>> selectRows() {
         List<Map<String, Object>> resultList = new ArrayList<>();
         Map<String, Object> resultMap;
@@ -192,6 +176,48 @@ public class Sql {
             logger.warning("Failed to execute SELECT query : " + e.getMessage());
         }
         return resultList;
+    }
+
+    /**
+     * 결과값이 Long인 SELECT문 실행
+     * @return SELECT 결과
+     */
+    public Long selectLong() {
+        Long result = 0L;
+        ResultSet rs;
+        try {
+            PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
+            for (int i = 0; i < params.size(); i++) {
+                psmt.setObject(i + 1, params.get(i));
+            }
+            // ResultMap에 조회된 데이터 추가
+            rs = psmt.executeQuery();
+            rs.next();
+            result = rs.getLong(1);
+            rs.close();
+            psmt.close();
+            conn.close();
+            return result;
+        } catch (SQLException e) {
+            logger.warning("Failed to execute SELECT query : " + e.getMessage());
+        }
+        return result;
+    }
+
+    public LocalDateTime selectDatetime() {
+        return LocalDateTime.now();
+    }
+
+    public String selectString() {
+        return "";
+    }
+
+    public Boolean selectBoolean() {
+        return false;
+    }
+
+    public List<Long> selectLongs() {
+        return new ArrayList<>();
     }
 
     public List<Article> selectRows(Class<Article> articleClass) {
