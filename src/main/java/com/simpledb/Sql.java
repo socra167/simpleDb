@@ -113,7 +113,36 @@ public class Sql {
         }
     }
 
+    /**
+     * SELECT문 실행
+     * @return Select 결과 Map
+     */
     public Map<String, Object> selectRow() {
+        Map<String, Object> resultMap = new HashMap<>();
+        ResultSet rs;
+        try {
+            PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
+            for (int i = 0; i < params.size(); i++) {
+                psmt.setObject(i + 1, params.get(i));
+            }
+            // ResultMap에 조회된 데이터 추가
+            rs = psmt.executeQuery();
+            ResultSetMetaData rsmd = rs.getMetaData();
+            int columnSize = rsmd.getColumnCount();
+            while (rs.next()) {
+                for (int i = 0; i < columnSize; i++) {
+                    resultMap.put(rsmd.getColumnName(i + 1), rs.getObject(i + 1));
+                }
+            }
+            rs.close();
+            psmt.close();
+            conn.close();
+            return resultMap;
+        } catch (SQLException e) {
+            logger.warning("Failed to execute SELECT query : " + e.getMessage());
+        }
+
+
         return new HashMap<>();
     }
 
