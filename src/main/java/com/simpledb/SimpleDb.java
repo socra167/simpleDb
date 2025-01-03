@@ -1,7 +1,6 @@
 package com.simpledb;
 
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.logging.Logger;
 
 public class SimpleDb {
@@ -11,6 +10,7 @@ public class SimpleDb {
     private String password;
     private String database;
     private boolean devMode;
+    private Connection conn;
     Logger logger = Logger.getLogger(this.getClass().getName());
 
     public SimpleDb(String url, String user, String password, String database) {
@@ -20,7 +20,7 @@ public class SimpleDb {
         this.database = database;
 
         try {
-            DriverManager.getConnection("jdbc:mysql://%s/%s?user=%s&password=%s".formatted(url, database, user, password));
+            conn = DriverManager.getConnection("jdbc:mysql://%s/%s?user=%s&password=%s".formatted(url, database, user, password));
         } catch (SQLException ex) {
             logger.warning("SQLException: " + ex.getMessage());
             logger.warning("SQLState: " + ex.getSQLState());
@@ -32,9 +32,46 @@ public class SimpleDb {
      * SQL문을 실행한다
      */
     public void run(String statement) {
+        Statement stmt = null;
+        try {
+            stmt = conn.createStatement();
+            stmt.execute(statement);
+        } catch (SQLException ex) {
+            logger.warning("SQLException: " + ex.getMessage());
+            logger.warning("SQLState: " + ex.getSQLState());
+            logger.warning("VendorError: " + ex.getErrorCode());
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException ex) {
+                    logger.warning("Failed to close PreparedStatement: " + ex.getMessage());
+                }
+            }
+        }
     }
 
-    public void run(String s, Object... objects) {
+    public void run(String statement, Object... objects) {
+        PreparedStatement psmt = null;
+        try {
+            psmt = conn.prepareStatement(statement);
+            for(int i = 0; i < objects.length; i++) {
+                psmt.setObject(i + 1, objects[i]);
+            }
+            psmt.execute();
+        } catch (SQLException ex) {
+            logger.warning("SQLException: " + ex.getMessage());
+            logger.warning("SQLState: " + ex.getSQLState());
+            logger.warning("VendorError: " + ex.getErrorCode());
+        } finally {
+            if (psmt != null) {
+                try {
+                    psmt.close();
+                } catch (SQLException ex) {
+                    logger.warning("Failed to close PreparedStatement: " + ex.getMessage());
+                }
+            }
+        }
     }
 
     public void setDevMode(boolean devMode) {
@@ -42,7 +79,7 @@ public class SimpleDb {
     }
 
     public Sql genSql() {
-        return new Sql();
+        return new Sql(conn);
     }
 
     public void startTransaction() {

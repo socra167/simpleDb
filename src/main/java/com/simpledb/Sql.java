@@ -2,6 +2,7 @@ package com.simpledb;
 
 import com.simpledb.Entity.Article;
 
+import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,15 +12,20 @@ import java.util.logging.Logger;
 
 public class Sql {
 
+    private Connection conn;
     private StringBuilder statementBuilder;
+    List<Object> params;
     Logger logger = Logger.getLogger(this.getClass().getName());
 
-    public Sql() {
+    public Sql(Connection conn) {
+        this.conn = conn;
         this.statementBuilder = new StringBuilder();
+        params = new ArrayList<>();
     }
 
     public Sql append(final String statement) {
         statementBuilder.append(statement);
+        statementBuilder.append(' ');
         return this;
     }
 
@@ -29,14 +35,10 @@ public class Sql {
      * @param objects values
      */
     public Sql append(final String statement, final Object ... objects) {
-        StringBuilder stringBuilder = new StringBuilder(statement);
-        try {
-            for (Object object : objects) {
-                int index = stringBuilder.indexOf("?");
-                stringBuilder.replace(index, index + 1, object.toString());
-            }
-        } catch (Exception e) {
-            logger.warning("인자의 수가 불일치하거나 인자를 문자로 바꿀 수 없습니다");
+        statementBuilder.append(statement);
+        statementBuilder.append(' ');
+        for (Object object : objects) {
+            params.add(object);
         }
         return this;
     }
@@ -50,8 +52,16 @@ public class Sql {
      * @return AUTO_INCREMENT 에 의해서 생성된 주키
      */
     public long insert() {
-
-        return 0L;
+        try {
+            PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
+            for (int i = 0; i < params.size(); i++) {
+                psmt.setObject(i + 1, params.get(i));
+            }
+            return psmt.executeUpdate();
+        } catch (SQLException e) {
+            logger.warning("Failed to execute INSERT query : " + e.getMessage());
+            return 0;
+        }
     }
 
     public int update() {
