@@ -79,7 +79,7 @@ public class Sql {
             }
             return psmt.executeUpdate();
         } catch (SQLException e) {
-            logger.warning("Failed to execute INSERT query : " + e.getMessage());
+            logger.warning("Failed to execute UPDATE query : " + e.getMessage());
             return 0;
         }
     }
