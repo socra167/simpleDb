@@ -54,9 +54,7 @@ public class Sql {
     public long insert() {
         try {
             PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString(), Statement.RETURN_GENERATED_KEYS);
-            for (int i = 0; i < params.size(); i++) {
-                psmt.setObject(i + 1, params.get(i));
-            }
+            setObjectsToStatement(psmt);
             psmt.executeUpdate();
             try (ResultSet generatedKeys = psmt.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
@@ -80,9 +78,7 @@ public class Sql {
     public int update() {
         try {
             PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
-            for (int i = 0; i < params.size(); i++) {
-                psmt.setObject(i + 1, params.get(i));
-            }
+            setObjectsToStatement(psmt);
             int affectedRow = psmt.executeUpdate();
             psmt.close();
             conn.close();
@@ -100,9 +96,7 @@ public class Sql {
     public int delete() {
         try {
             PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
-            for (int i = 0; i < params.size(); i++) {
-                psmt.setObject(i + 1, params.get(i));
-            }
+            setObjectsToStatement(psmt);
             int affectedRow = psmt.executeUpdate();
             psmt.close();
             conn.close();
@@ -122,9 +116,7 @@ public class Sql {
         ResultSet rs;
         try {
             PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
-            for (int i = 0; i < params.size(); i++) {
-                psmt.setObject(i + 1, params.get(i));
-            }
+            setObjectsToStatement(psmt);
             // ResultMap에 조회된 데이터 추가
             rs = psmt.executeQuery();
             ResultSetMetaData rsmd = rs.getMetaData();
@@ -154,9 +146,7 @@ public class Sql {
         ResultSet rs;
         try {
             PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
-            for (int i = 0; i < params.size(); i++) {
-                psmt.setObject(i + 1, params.get(i));
-            }
+            setObjectsToStatement(psmt);
             // ResultMap에 조회된 데이터 추가
             rs = psmt.executeQuery();
             ResultSetMetaData rsmd = rs.getMetaData();
@@ -187,9 +177,7 @@ public class Sql {
         ResultSet rs;
         try {
             PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
-            for (int i = 0; i < params.size(); i++) {
-                psmt.setObject(i + 1, params.get(i));
-            }
+            setObjectsToStatement(psmt);
             // ResultMap에 조회된 데이터 추가
             rs = psmt.executeQuery();
             rs.next();
@@ -226,5 +214,11 @@ public class Sql {
 
     public Article selectRow(Class<Article> articleClass) {
         return new Article();
+    }
+
+    private void setObjectsToStatement(PreparedStatement psmt) throws SQLException {
+        for (int i = 0; i < params.size(); i++) {
+            psmt.setObject(i + 1, params.get(i));
+        }
     }
 }
