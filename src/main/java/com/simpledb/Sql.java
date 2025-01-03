@@ -210,12 +210,26 @@ public class Sql {
         return result;
     }
 
-    public LocalDateTime selectDatetime() {
-        return LocalDateTime.now();
+    public Boolean selectBoolean() {
+        Boolean result = false;
+        ResultSet rs;
+        try {
+            PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
+            setObjectsToStatement(psmt);
+            // ResultMap에 조회된 데이터 추가
+            rs = psmt.executeQuery();
+            rs.next();
+            result = rs.getBoolean(1);
+            close(rs, psmt);
+            return result;
+        } catch (SQLException e) {
+            logger.warning("Failed to execute SELECT query : " + e.getMessage());
+        }
+        return result;
     }
 
-    public Boolean selectBoolean() {
-        return false;
+    public LocalDateTime selectDatetime() {
+        return LocalDateTime.now();
     }
 
     public List<Long> selectLongs() {
