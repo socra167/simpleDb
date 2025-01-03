@@ -141,9 +141,7 @@ public class Sql {
         } catch (SQLException e) {
             logger.warning("Failed to execute SELECT query : " + e.getMessage());
         }
-
-
-        return new HashMap<>();
+        return resultMap;
     }
 
     public LocalDateTime selectDatetime() {
@@ -167,7 +165,33 @@ public class Sql {
     }
 
     public List<Map<String, Object>> selectRows() {
-        return new ArrayList<>();
+        List<Map<String, Object>> resultList = new ArrayList<>();
+        Map<String, Object> resultMap;
+        ResultSet rs;
+        try {
+            PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
+            for (int i = 0; i < params.size(); i++) {
+                psmt.setObject(i + 1, params.get(i));
+            }
+            // ResultMap에 조회된 데이터 추가
+            rs = psmt.executeQuery();
+            ResultSetMetaData rsmd = rs.getMetaData();
+            int columnSize = rsmd.getColumnCount();
+            while (rs.next()) {
+                resultMap = new HashMap<>();
+                for (int i = 0; i < columnSize; i++) {
+                    resultMap.put(rsmd.getColumnName(i + 1), rs.getObject(i + 1));
+                }
+                resultList.add(resultMap);
+            }
+            rs.close();
+            psmt.close();
+            conn.close();
+            return resultList;
+        } catch (SQLException e) {
+            logger.warning("Failed to execute SELECT query : " + e.getMessage());
+        }
+        return resultList;
     }
 
     public List<Article> selectRows(Class<Article> articleClass) {
