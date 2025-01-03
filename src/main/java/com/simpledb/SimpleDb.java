@@ -18,7 +18,9 @@ public class SimpleDb {
         this.user = user;
         this.password = password;
         this.database = database;
+    }
 
+    private void connectDb() {
         try {
             conn = DriverManager.getConnection("jdbc:mysql://%s/%s?user=%s&password=%s".formatted(url, database, user, password));
         } catch (SQLException ex) {
@@ -34,6 +36,7 @@ public class SimpleDb {
     public void run(String statement) {
         Statement stmt = null;
         try {
+            connectDb();
             stmt = conn.createStatement();
             stmt.execute(statement);
         } catch (SQLException ex) {
@@ -44,6 +47,7 @@ public class SimpleDb {
             if (stmt != null) {
                 try {
                     stmt.close();
+                    conn.close();
                 } catch (SQLException ex) {
                     logger.warning("Failed to close PreparedStatement: " + ex.getMessage());
                 }
@@ -54,6 +58,7 @@ public class SimpleDb {
     public void run(String statement, Object... objects) {
         PreparedStatement psmt = null;
         try {
+            connectDb();
             psmt = conn.prepareStatement(statement);
             for(int i = 0; i < objects.length; i++) {
                 psmt.setObject(i + 1, objects[i]);
@@ -67,6 +72,7 @@ public class SimpleDb {
             if (psmt != null) {
                 try {
                     psmt.close();
+                    conn.close();
                 } catch (SQLException ex) {
                     logger.warning("Failed to close PreparedStatement: " + ex.getMessage());
                 }
@@ -79,6 +85,7 @@ public class SimpleDb {
     }
 
     public Sql genSql() {
+        connectDb();
         return new Sql(conn);
     }
 

@@ -62,8 +62,10 @@ public class Sql {
                 if (generatedKeys.next()) {
                     // 자동 생성된 키 값 (AUTO_INCREMENT id)
                     long generatedId = generatedKeys.getLong(1);
+                    conn.close();
                     return generatedId;
                 }
+                conn.close();
             }
         } catch (SQLException e) {
             logger.warning("Failed to execute INSERT query : " + e.getMessage());
@@ -83,6 +85,7 @@ public class Sql {
             }
             int affectedRow = psmt.executeUpdate();
             psmt.close();
+            conn.close();
             return affectedRow;
         } catch (SQLException e) {
             logger.warning("Failed to execute UPDATE query : " + e.getMessage());
@@ -102,6 +105,7 @@ public class Sql {
             }
             int affectedRow = psmt.executeUpdate();
             psmt.close();
+            conn.close();
             return affectedRow;
         } catch (SQLException e) {
             logger.warning("Failed to execute DELETE query : " + e.getMessage());
