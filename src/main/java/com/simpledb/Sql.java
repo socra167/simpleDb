@@ -53,6 +53,26 @@ public class Sql {
      */
     public long insert() {
         try {
+            PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString(), Statement.RETURN_GENERATED_KEYS);
+            for (int i = 0; i < params.size(); i++) {
+                psmt.setObject(i + 1, params.get(i));
+            }
+            psmt.executeUpdate();
+            try (ResultSet generatedKeys = psmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    // 자동 생성된 키 값 (AUTO_INCREMENT id)
+                    long generatedId = generatedKeys.getLong(1);
+                    return generatedId;
+                }
+            }
+        } catch (SQLException e) {
+            logger.warning("Failed to execute INSERT query : " + e.getMessage());
+        }
+        return 0;
+    }
+
+    public int update() {
+        try {
             PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
             for (int i = 0; i < params.size(); i++) {
                 psmt.setObject(i + 1, params.get(i));
@@ -62,10 +82,6 @@ public class Sql {
             logger.warning("Failed to execute INSERT query : " + e.getMessage());
             return 0;
         }
-    }
-
-    public int update() {
-        return 0;
     }
 
     public int delete() {
