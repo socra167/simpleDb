@@ -24,25 +24,21 @@ public class SimpleDb {
         try {
             conn = DriverManager.getConnection("jdbc:mysql://%s/%s?user=%s&password=%s".formatted(url, database, user, password));
         } catch (SQLException ex) {
-            logger.warning("SQLException: " + ex.getMessage());
-            logger.warning("SQLState: " + ex.getSQLState());
-            logger.warning("VendorError: " + ex.getErrorCode());
+            logSqlExceptionMessage(ex);
         }
     }
 
     /**
      * SQL문을 실행한다
      */
-    public void run(String statement) {
+    public void run(final String statement) {
         Statement stmt = null;
         try {
             connectDb();
             stmt = conn.createStatement();
             stmt.execute(statement);
         } catch (SQLException ex) {
-            logger.warning("SQLException: " + ex.getMessage());
-            logger.warning("SQLState: " + ex.getSQLState());
-            logger.warning("VendorError: " + ex.getErrorCode());
+            logSqlExceptionMessage(ex);
         } finally {
             if (stmt != null) {
                 try {
@@ -55,7 +51,7 @@ public class SimpleDb {
         }
     }
 
-    public void run(String statement, Object... objects) {
+    public void run(final String statement, final Object... objects) {
         PreparedStatement psmt = null;
         try {
             connectDb();
@@ -65,9 +61,7 @@ public class SimpleDb {
             }
             psmt.execute();
         } catch (SQLException ex) {
-            logger.warning("SQLException: " + ex.getMessage());
-            logger.warning("SQLState: " + ex.getSQLState());
-            logger.warning("VendorError: " + ex.getErrorCode());
+            logSqlExceptionMessage(ex);
         } finally {
             if (psmt != null) {
                 try {
@@ -80,7 +74,7 @@ public class SimpleDb {
         }
     }
 
-    public void setDevMode(boolean devMode) {
+    public void setDevMode(final boolean devMode) {
         this.devMode = devMode;
     }
 
@@ -99,5 +93,11 @@ public class SimpleDb {
     }
 
     public void close() {
+    }
+
+    private void logSqlExceptionMessage(SQLException ex) {
+        logger.warning("SQLException: " + ex.getMessage());
+        logger.warning("SQLState: " + ex.getSQLState());
+        logger.warning("VendorError: " + ex.getErrorCode());
     }
 }

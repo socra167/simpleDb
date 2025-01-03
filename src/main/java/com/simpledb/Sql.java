@@ -2,23 +2,25 @@ package com.simpledb;
 
 import com.simpledb.Entity.Article;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public class Sql {
 
-    private Connection conn;
-    private StringBuilder statementBuilder;
-    List<Object> params;
-    Logger logger = Logger.getLogger(this.getClass().getName());
+    private final Connection conn;
+    private final StringBuilder statementBuilder;
+    private final List<Object> params;
+    private final Logger logger = Logger.getLogger(this.getClass().getName());
 
-    public Sql(Connection conn) {
+    public Sql(final Connection conn) {
         this.conn = conn;
         this.statementBuilder = new StringBuilder();
         params = new ArrayList<>();
@@ -90,8 +92,7 @@ public class Sql {
             PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
             setObjectsToStatement(psmt);
             int affectedRow = psmt.executeUpdate();
-            psmt.close();
-            conn.close();
+            close(psmt);
             return affectedRow;
         } catch (SQLException e) {
             logger.warning("Failed to execute UPDATE query : " + e.getMessage());
@@ -108,8 +109,7 @@ public class Sql {
             PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
             setObjectsToStatement(psmt);
             int affectedRow = psmt.executeUpdate();
-            psmt.close();
-            conn.close();
+            close(psmt);
             return affectedRow;
         } catch (SQLException e) {
             logger.warning("Failed to execute DELETE query : " + e.getMessage());
@@ -219,13 +219,6 @@ public class Sql {
         return resultList;
     }
 
-    private String capitalize(String string) {
-        if (string == null || string.isEmpty()) {
-            return string;
-        }
-        return string.substring(0, 1).toUpperCase() + string.substring(1);
-    }
-
     /**
      * 결과값이 Long인 SELECT문 실행
      * @return SELECT 결과
@@ -246,12 +239,6 @@ public class Sql {
             logger.warning("Failed to execute SELECT query : " + e.getMessage());
         }
         return result;
-    }
-
-    private void close(ResultSet rs, PreparedStatement psmt) throws SQLException {
-        rs.close();
-        psmt.close();
-        conn.close();
     }
 
     public String selectString() {
@@ -321,5 +308,22 @@ public class Sql {
         for (int i = 0; i < params.size(); i++) {
             psmt.setObject(i + 1, params.get(i));
         }
+    }
+
+    private String capitalize(String string) {
+        if (string == null || string.isEmpty()) {
+            return string;
+        }
+        return string.substring(0, 1).toUpperCase() + string.substring(1);
+    }
+
+    private void close(PreparedStatement psmt) throws SQLException {
+        psmt.close();
+        conn.close();
+    }
+
+    private void close(final ResultSet rs, final PreparedStatement psmt) throws SQLException {
+        rs.close();
+        close(psmt);
     }
 }
