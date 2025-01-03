@@ -48,7 +48,7 @@ public class Sql {
     }
 
     /**
-     *
+     * INSERT문 실행
      * @return AUTO_INCREMENT 에 의해서 생성된 주키
      */
     public long insert() {
@@ -71,19 +71,29 @@ public class Sql {
         return 0;
     }
 
+    /**
+     * UPDATE문 실행
+     * @return 수정된 row 개수
+     */
     public int update() {
         try {
             PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
             for (int i = 0; i < params.size(); i++) {
                 psmt.setObject(i + 1, params.get(i));
             }
-            return psmt.executeUpdate();
+            int affectedRow = psmt.executeUpdate();
+            psmt.close();
+            return affectedRow;
         } catch (SQLException e) {
             logger.warning("Failed to execute UPDATE query : " + e.getMessage());
             return 0;
         }
     }
 
+    /**
+     * DELETE문 실행
+     * @return 삭제된 row 개수
+     */
     public int delete() {
         return 0;
     }
