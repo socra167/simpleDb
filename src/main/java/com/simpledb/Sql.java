@@ -2,12 +2,13 @@ package com.simpledb;
 
 import com.simpledb.Entity.Article;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class Sql {
@@ -174,6 +175,58 @@ public class Sql {
     }
 
     /**
+     * 여러 Row에 대한 SELECT문 실행
+     *
+     * @param clazz SELECT 하려는 entity의 클래스
+     * @return SELECT 결과 entity 객체들의 list
+     */
+    public <T> List<T> selectRows(Class<T> clazz) {
+        List<T> resultList = new ArrayList<>();
+        T resultObject;
+        ResultSet rs;
+
+        try {
+            PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
+            setObjectsToStatement(psmt);
+            rs = psmt.executeQuery();
+            ResultSetMetaData rsmd = rs.getMetaData();
+            int columnSize = rsmd.getColumnCount();
+            while (rs.next()) {
+
+                // ResultMap에 조회된 데이터를 추가
+                Map<String, Object> resultMap = new HashMap<>();
+                for (int i = 0; i < columnSize; i++) {
+                    resultMap.put(rsmd.getColumnName(i + 1), rs.getObject(i + 1));
+                }
+
+                // 인스턴스로 만든 후 setter 메소드로 필드값 저장
+                resultObject = clazz.getDeclaredConstructor().newInstance();
+                Field[] fields = clazz.getDeclaredFields();
+                for (Field field : fields) {
+                    String setterMethodName = "set" + capitalize(field.getName());
+                    Method setterMethod = clazz.getMethod(setterMethodName, field.getType());
+                    setterMethod.invoke(resultObject, resultMap.get(field.getName()));
+                }
+                resultList.add(resultObject);
+            }
+            close(rs, psmt);
+            return resultList;
+        } catch (SQLException e) {
+            logger.warning("Failed to execute SELECT query : " + e.getMessage());
+        } catch (InvocationTargetException | IllegalAccessException | InstantiationException | NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+        return resultList;
+    }
+
+    private String capitalize(String string) {
+        if (string == null || string.isEmpty()) {
+            return string;
+        }
+        return string.substring(0, 1).toUpperCase() + string.substring(1);
+    }
+
+    /**
      * 결과값이 Long인 SELECT문 실행
      * @return SELECT 결과
      */
@@ -258,10 +311,6 @@ public class Sql {
 
     public LocalDateTime selectDatetime() {
         return LocalDateTime.now();
-    }
-
-    public List<Article> selectRows(Class<Article> articleClass) {
-        return new ArrayList<>();
     }
 
     public Article selectRow(Class<Article> articleClass) {

@@ -9,6 +9,31 @@ public class Article {
     private LocalDateTime createdDate;
     private LocalDateTime modifiedDate;
 
+    public Article setId(Long id) {
+        this.id = id;
+        return this;
+    }
+
+    public Article setTitle(String title) {
+        this.title = title;
+        return this;
+    }
+
+    public Article setBody(String body) {
+        this.body = body;
+        return this;
+    }
+
+    public Article setCreatedDate(LocalDateTime createdDate) {
+        this.createdDate = createdDate;
+        return this;
+    }
+
+    public Article setModifiedDate(LocalDateTime modifiedDate) {
+        this.modifiedDate = modifiedDate;
+        return this;
+    }
+
     public Long getId() {
         return id;
     }
