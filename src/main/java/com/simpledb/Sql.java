@@ -126,9 +126,7 @@ public class Sql {
                     resultMap.put(rsmd.getColumnName(i + 1), rs.getObject(i + 1));
                 }
             }
-            rs.close();
-            psmt.close();
-            conn.close();
+            close(rs, psmt);
             return resultMap;
         } catch (SQLException e) {
             logger.warning("Failed to execute SELECT query : " + e.getMessage());
@@ -158,9 +156,7 @@ public class Sql {
                 }
                 resultList.add(resultMap);
             }
-            rs.close();
-            psmt.close();
-            conn.close();
+            close(rs, psmt);
             return resultList;
         } catch (SQLException e) {
             logger.warning("Failed to execute SELECT query : " + e.getMessage());
@@ -182,9 +178,31 @@ public class Sql {
             rs = psmt.executeQuery();
             rs.next();
             result = rs.getLong(1);
-            rs.close();
-            psmt.close();
-            conn.close();
+            close(rs, psmt);
+            return result;
+        } catch (SQLException e) {
+            logger.warning("Failed to execute SELECT query : " + e.getMessage());
+        }
+        return result;
+    }
+
+    private void close(ResultSet rs, PreparedStatement psmt) throws SQLException {
+        rs.close();
+        psmt.close();
+        conn.close();
+    }
+
+    public String selectString() {
+        String result = "";
+        ResultSet rs;
+        try {
+            PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
+            setObjectsToStatement(psmt);
+            // ResultMap에 조회된 데이터 추가
+            rs = psmt.executeQuery();
+            rs.next();
+            result = rs.getString(1);
+            close(rs, psmt);
             return result;
         } catch (SQLException e) {
             logger.warning("Failed to execute SELECT query : " + e.getMessage());
@@ -194,10 +212,6 @@ public class Sql {
 
     public LocalDateTime selectDatetime() {
         return LocalDateTime.now();
-    }
-
-    public String selectString() {
-        return "";
     }
 
     public Boolean selectBoolean() {
