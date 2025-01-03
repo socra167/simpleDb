@@ -43,7 +43,16 @@ public class Sql {
         return this;
     }
 
-    public Sql appendIn(String statement, Object ... object) {
+    public Sql appendIn(final String statement, final Object ... objects) {
+        StringBuilder tmpStatementBuilder = new StringBuilder(statement);
+        int placeHolderIndex = tmpStatementBuilder.indexOf("?");
+        for (int i = 0; i < objects.length - 1; i++) {
+            tmpStatementBuilder.insert(placeHolderIndex, "?, ");
+        }
+        statementBuilder.append(tmpStatementBuilder);
+        for (Object object : objects) {
+            params.add(object);
+        }
         return this;
     }
 
