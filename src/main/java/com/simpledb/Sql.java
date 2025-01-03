@@ -95,7 +95,18 @@ public class Sql {
      * @return 삭제된 row 개수
      */
     public int delete() {
-        return 0;
+        try {
+            PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
+            for (int i = 0; i < params.size(); i++) {
+                psmt.setObject(i + 1, params.get(i));
+            }
+            int affectedRow = psmt.executeUpdate();
+            psmt.close();
+            return affectedRow;
+        } catch (SQLException e) {
+            logger.warning("Failed to execute DELETE query : " + e.getMessage());
+            return 0;
+        }
     }
 
     public Map<String, Object> selectRow() {
