@@ -237,12 +237,27 @@ public class Sql {
         return result;
     }
 
-    public LocalDateTime selectDatetime() {
-        return LocalDateTime.now();
+    public List<Long> selectLongs() {
+        List<Long> resultList = new ArrayList<>();
+        ResultSet rs;
+        try {
+            PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
+            setObjectsToStatement(psmt);
+            // ResultMap에 조회된 데이터 추가
+            rs = psmt.executeQuery();
+            while (rs.next()) {
+                resultList.add(rs.getLong(1));
+            }
+            close(rs, psmt);
+            return resultList;
+        } catch (SQLException e) {
+            logger.warning("Failed to execute SELECT query : " + e.getMessage());
+        }
+        return resultList;
     }
 
-    public List<Long> selectLongs() {
-        return new ArrayList<>();
+    public LocalDateTime selectDatetime() {
+        return LocalDateTime.now();
     }
 
     public List<Article> selectRows(Class<Article> articleClass) {
