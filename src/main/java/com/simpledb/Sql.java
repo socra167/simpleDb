@@ -1,7 +1,5 @@
 package com.simpledb;
 
-import com.simpledb.Entity.Article;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -34,10 +32,11 @@ public class Sql {
 
     /**
      * SQL문의 Statement, 인자값 추가
+     *
      * @param statement SQL statement
-     * @param objects values
+     * @param objects   values
      */
-    public Sql append(final String statement, final Object ... objects) {
+    public Sql append(final String statement, final Object... objects) {
         statementBuilder.append(statement);
         statementBuilder.append(' ');
         for (Object object : objects) {
@@ -46,7 +45,7 @@ public class Sql {
         return this;
     }
 
-    public Sql appendIn(final String statement, final Object ... objects) {
+    public Sql appendIn(final String statement, final Object... objects) {
         StringBuilder tmpStatementBuilder = new StringBuilder(statement);
         int placeHolderIndex = tmpStatementBuilder.indexOf("?");
         for (int i = 0; i < objects.length - 1; i++) {
@@ -61,6 +60,7 @@ public class Sql {
 
     /**
      * INSERT문 실행
+     *
      * @return AUTO_INCREMENT 에 의해서 생성된 주키
      */
     public long insert() {
@@ -85,6 +85,7 @@ public class Sql {
 
     /**
      * UPDATE문 실행
+     *
      * @return 수정된 row 개수
      */
     public int update() {
@@ -102,6 +103,7 @@ public class Sql {
 
     /**
      * DELETE문 실행
+     *
      * @return 삭제된 row 개수
      */
     public int delete() {
@@ -119,6 +121,7 @@ public class Sql {
 
     /**
      * 하나의 Row에 대한 SELECT문 실행
+     *
      * @return SELECT 결과 Map
      */
     public Map<String, Object> selectRow() {
@@ -146,6 +149,7 @@ public class Sql {
 
     /**
      * 여러 Row에 대한 SELECT문 실행
+     *
      * @return SELECT 결과 Map의 List
      */
     public List<Map<String, Object>> selectRows() {
@@ -172,6 +176,50 @@ public class Sql {
             logger.warning("Failed to execute SELECT query : " + e.getMessage());
         }
         return resultList;
+    }
+
+    /**
+     * 하나의 Row에 대한 SELECT문 실행
+     *
+     * @param clazz SELECT 하려는 entity의 클래스
+     * @return SELECT 결과 entity 객체
+     */
+    public <T> T selectRow(Class<T> clazz) {
+        T resultObject = null;
+        ResultSet rs;
+
+        try {
+            PreparedStatement psmt = conn.prepareStatement(statementBuilder.toString());
+            setObjectsToStatement(psmt);
+            rs = psmt.executeQuery();
+            ResultSetMetaData rsmd = rs.getMetaData();
+            int columnSize = rsmd.getColumnCount();
+
+            // ResultMap에 조회된 데이터를 추가
+            rs.next();
+            Map<String, Object> resultMap = new HashMap<>();
+            for (int i = 0; i < columnSize; i++) {
+                resultMap.put(rsmd.getColumnName(i + 1), rs.getObject(i + 1));
+            }
+
+            // 인스턴스로 만든 후 setter 메소드로 필드값 저장
+            resultObject = clazz.getDeclaredConstructor().newInstance();
+            Field[] fields = clazz.getDeclaredFields();
+            for (Field field : fields) {
+                String setterMethodName = "set" + capitalize(field.getName());
+                Method setterMethod = clazz.getMethod(setterMethodName, field.getType());
+                setterMethod.invoke(resultObject, resultMap.get(field.getName()));
+            }
+
+            close(rs, psmt);
+            return resultObject;
+        } catch (SQLException e) {
+            logger.warning("Failed to execute SELECT query : " + e.getMessage());
+        } catch (InvocationTargetException | IllegalAccessException | InstantiationException |
+                 NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+        return resultObject;
     }
 
     /**
@@ -213,7 +261,8 @@ public class Sql {
             return resultList;
         } catch (SQLException e) {
             logger.warning("Failed to execute SELECT query : " + e.getMessage());
-        } catch (InvocationTargetException | IllegalAccessException | InstantiationException | NoSuchMethodException e) {
+        } catch (InvocationTargetException | IllegalAccessException | InstantiationException |
+                 NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
         return resultList;
@@ -221,6 +270,7 @@ public class Sql {
 
     /**
      * 결과값이 Long인 SELECT문 실행
+     *
      * @return SELECT 결과
      */
     public Long selectLong() {
@@ -298,10 +348,6 @@ public class Sql {
 
     public LocalDateTime selectDatetime() {
         return LocalDateTime.now();
-    }
-
-    public Article selectRow(Class<Article> articleClass) {
-        return new Article();
     }
 
     private void setObjectsToStatement(PreparedStatement psmt) throws SQLException {
