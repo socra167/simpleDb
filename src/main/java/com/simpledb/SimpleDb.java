@@ -1,21 +1,20 @@
 package com.simpledb;
 
 import java.sql.*;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class SimpleDb {
 
-    private String url;
-    private String user;
-    private String password;
-    private String database;
+    private final String url;
+    private final String user;
+    private final String password;
+    private final String database;
     private boolean devMode;
     private boolean autoCommit;
     private Connection conn;
-    Logger logger = Logger.getLogger(this.getClass().getName());
+    private final Logger logger = Logger.getLogger(this.getClass().getName());
 
-    public SimpleDb(String url, String user, String password, String database) {
+    public SimpleDb(final String url, final String user, final String password, final String database) {
         this.url = url;
         this.user = user;
         this.password = password;
@@ -136,7 +135,7 @@ public class SimpleDb {
         logger.info("Connect to Database : " + database);
     }
 
-    private void logSqlExceptionMessage(SQLException e) {
+    private void logSqlExceptionMessage(final SQLException e) {
         logger.warning("SQLException: " + e.getMessage());
         logger.warning("SQLState: " + e.getSQLState());
         logger.warning("VendorError: " + e.getErrorCode());
