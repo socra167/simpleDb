@@ -20,7 +20,7 @@ public class SimpleDb {
         this.database = database;
     }
 
-    private void connectDb() {
+    private synchronized void connectDb() {
         try {
             conn = DriverManager.getConnection("jdbc:mysql://%s/%s?user=%s&password=%s".formatted(url, database, user, password));
         } catch (SQLException ex) {
