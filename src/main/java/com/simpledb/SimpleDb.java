@@ -1,6 +1,7 @@
 package com.simpledb;
 
 import java.sql.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class SimpleDb {
@@ -26,8 +27,13 @@ public class SimpleDb {
         try {
             conn = DriverManager.getConnection("jdbc:mysql://%s/%s?user=%s&password=%s".formatted(url, database, user, password));
             conn.setAutoCommit(autoCommit);
+            if (devMode) {
+                logConnected();
+            }
         } catch (SQLException e) {
-            logSqlExceptionMessage(e);
+            if (devMode) {
+                logSqlExceptionMessage(e);
+            }
         }
     }
 
@@ -48,7 +54,9 @@ public class SimpleDb {
                     stmt.close();
                     conn.close();
                 } catch (SQLException e) {
-                    logger.warning("Failed to close PreparedStatement: " + e.getMessage());
+                    if (devMode) {
+                        logger.warning("Failed to close PreparedStatement: " + e.getMessage());
+                    }
                 }
             }
         }
@@ -71,7 +79,9 @@ public class SimpleDb {
                     psmt.close();
                     conn.close();
                 } catch (SQLException e) {
-                    logger.warning("Failed to close PreparedStatement: " + e.getMessage());
+                    if (devMode) {
+                        logger.warning("Failed to close PreparedStatement: " + e.getMessage());
+                    }
                 }
             }
         }
@@ -95,7 +105,9 @@ public class SimpleDb {
             conn.commit();
             autoCommit = true;
         } catch (SQLException e) {
-            logSqlExceptionMessage(e);
+            if (devMode) {
+                logSqlExceptionMessage(e);
+            }
         }
     }
 
@@ -104,7 +116,9 @@ public class SimpleDb {
             conn.rollback();
             autoCommit = true;
         } catch (SQLException e) {
-            logSqlExceptionMessage(e);
+            if (devMode) {
+                logSqlExceptionMessage(e);
+            }
         }
     }
 
@@ -112,8 +126,14 @@ public class SimpleDb {
         try {
             conn.close();
         } catch (SQLException e) {
-            logSqlExceptionMessage(e);
+            if (devMode) {
+                logSqlExceptionMessage(e);
+            }
         }
+    }
+
+    private void logConnected() {
+        logger.info("Connect to Database : " + database);
     }
 
     private void logSqlExceptionMessage(SQLException e) {
