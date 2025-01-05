@@ -10,6 +10,7 @@ public class SimpleDb {
     private String password;
     private String database;
     private boolean devMode;
+    private boolean autoCommit;
     private Connection conn;
     Logger logger = Logger.getLogger(this.getClass().getName());
 
@@ -18,13 +19,15 @@ public class SimpleDb {
         this.user = user;
         this.password = password;
         this.database = database;
+        autoCommit = true;
     }
 
     private synchronized void connectDb() {
         try {
             conn = DriverManager.getConnection("jdbc:mysql://%s/%s?user=%s&password=%s".formatted(url, database, user, password));
-        } catch (SQLException ex) {
-            logSqlExceptionMessage(ex);
+            conn.setAutoCommit(autoCommit);
+        } catch (SQLException e) {
+            logSqlExceptionMessage(e);
         }
     }
 
@@ -37,15 +40,15 @@ public class SimpleDb {
             connectDb();
             stmt = conn.createStatement();
             stmt.execute(statement);
-        } catch (SQLException ex) {
-            logSqlExceptionMessage(ex);
+        } catch (SQLException e) {
+            logSqlExceptionMessage(e);
         } finally {
             if (stmt != null) {
                 try {
                     stmt.close();
                     conn.close();
-                } catch (SQLException ex) {
-                    logger.warning("Failed to close PreparedStatement: " + ex.getMessage());
+                } catch (SQLException e) {
+                    logger.warning("Failed to close PreparedStatement: " + e.getMessage());
                 }
             }
         }
@@ -60,15 +63,15 @@ public class SimpleDb {
                 psmt.setObject(i + 1, objects[i]);
             }
             psmt.execute();
-        } catch (SQLException ex) {
-            logSqlExceptionMessage(ex);
+        } catch (SQLException e) {
+            logSqlExceptionMessage(e);
         } finally {
             if (psmt != null) {
                 try {
                     psmt.close();
                     conn.close();
-                } catch (SQLException ex) {
-                    logger.warning("Failed to close PreparedStatement: " + ex.getMessage());
+                } catch (SQLException e) {
+                    logger.warning("Failed to close PreparedStatement: " + e.getMessage());
                 }
             }
         }
@@ -84,20 +87,38 @@ public class SimpleDb {
     }
 
     public void startTransaction() {
+        autoCommit = false;
     }
 
     public void commit() {
+        try {
+            conn.commit();
+            autoCommit = true;
+        } catch (SQLException e) {
+            logSqlExceptionMessage(e);
+        }
     }
 
     public void rollback() {
+        try {
+            conn.rollback();
+            autoCommit = true;
+        } catch (SQLException e) {
+            logSqlExceptionMessage(e);
+        }
     }
 
     public void close() {
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            logSqlExceptionMessage(e);
+        }
     }
 
-    private void logSqlExceptionMessage(SQLException ex) {
-        logger.warning("SQLException: " + ex.getMessage());
-        logger.warning("SQLState: " + ex.getSQLState());
-        logger.warning("VendorError: " + ex.getErrorCode());
+    private void logSqlExceptionMessage(SQLException e) {
+        logger.warning("SQLException: " + e.getMessage());
+        logger.warning("SQLState: " + e.getSQLState());
+        logger.warning("VendorError: " + e.getErrorCode());
     }
 }

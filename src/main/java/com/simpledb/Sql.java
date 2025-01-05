@@ -72,10 +72,8 @@ public class Sql {
                 if (generatedKeys.next()) {
                     // 자동 생성된 키 값 (AUTO_INCREMENT id)
                     long generatedId = generatedKeys.getLong(1);
-                    conn.close();
                     return generatedId;
                 }
-                conn.close();
             }
         } catch (SQLException e) {
             logger.warning("Failed to execute INSERT query : " + e.getMessage());
@@ -365,7 +363,6 @@ public class Sql {
 
     private void close(PreparedStatement psmt) throws SQLException {
         psmt.close();
-        conn.close();
     }
 
     private void close(final ResultSet rs, final PreparedStatement psmt) throws SQLException {
